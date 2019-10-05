@@ -4,36 +4,37 @@ volatile int short CNANGED_FREQUENCY_MODE = 0;
 volatile int short LOW_POWER_MODE_CORE_4_MODE = 0;
 volatile int short DEFAULT_DELAY_IN_INTERRUPT = 1000;
 
-#pragma vector = PORT1_VECTOR
+#
+pragma vector = PORT1_VECTOR
 __interrupt void PORT1_S1(void) {
-	volatile int i;
-	volatile int k = 1;
-	
-	for (i = 0; i < DEFAULT_DELAY_IN_INTERRUPT; i++) {
-	    k++;
-	}
-	
+    volatile int i;
+    volatile int k = 1;
+
+    for (i = 0; i < DEFAULT_DELAY_IN_INTERRUPT; i++) {
+        k++;
+    }
+
     if (LOW_POWER_MODE_CORE_4_MODE) {
         _bic_SR_register_on_exit(LPM4_bits);
         LOW_POWER_MODE_CORE_4_MODE = 0;
     } else {
-    	LOW_POWER_MODE_CORE_4_MODE = 1;
+        LOW_POWER_MODE_CORE_4_MODE = 1;
         _bis_SR_register_on_exit(LPM4_bits);
 
     }
-    
+
     P1IFG &= ~BIT7;
 }
 
-#pragma vector = PORT2_VECTOR
+# pragma vector = PORT2_VECTOR
 __interrupt void PORT2_S2(void) {
-	volatile int i;
-	volatile int k = 1;
-	
-	for (i = 0; i < DEFAULT_DELAY_IN_INTERRUPT; i++) {
-	    k++;
-	}
-	
+    volatile int i;
+    volatile int k = 1;
+
+    for (i = 0; i < DEFAULT_DELAY_IN_INTERRUPT; i++) {
+        k++;
+    }
+
     if (CNANGED_FREQUENCY_MODE) {
         UCSCTL4 = SELM__DCOCLK;
         UCSCTL5 = DIVM__32;
@@ -43,7 +44,7 @@ __interrupt void PORT2_S2(void) {
         UCSCTL5 = DIVM__16;
         CNANGED_FREQUENCY_MODE = 1;
     }
-    
+
     P2IFG &= ~BIT2;
 }
 
