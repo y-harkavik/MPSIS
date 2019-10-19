@@ -10,7 +10,7 @@ void setupTimerA1() {
 }
 
 void setupWatchDogTimer() {
-	WDTCTL = WDTPW | WDTTMSEL | WDTCNTCL | WDTSSEL_0 | WDTIS_5;
+	WDTCTL = WDTPW | WDTTMSEL | WDTCNTCL | WDTSSEL_0 | WDTIS_5 | (!WDTHOLD);
 }
 
 void startTimerA1() {
@@ -19,8 +19,9 @@ void startTimerA1() {
 }
 
 void startWatchDogTimer() {
+	SFRIE1 |= WDTIE;
 	setupWatchDogTimer();
-	WDTCTL &= ~WDTHOLD;
+	// WDTCTL &= ~WDTHOLD;
 }
 
 void stopTimerA1() {
