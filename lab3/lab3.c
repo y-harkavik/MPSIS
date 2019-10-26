@@ -3,25 +3,16 @@
 int CURRENT_TIMER = 0; // 0 - WT, 1 - TA1
 int interruptsCount = 0;
 
-void setupTimerA1() {
+void startTimerA1() {
+	TA1CCTL0 = CCIE;
 	TA1CCR0 = 10485;
 	TA1EX0 = TAIDEX_4;
 	TA1CTL = TASSEL_2 | ID_1 | MC_1 | TACLR;
 }
 
-void setupWatchDogTimer() {
-	WDTCTL = WDTPW | WDTTMSEL | WDTCNTCL | WDTSSEL_0 | WDTIS_5 | (!WDTHOLD);
-}
-
-void startTimerA1() {
-	TA1CCTL0 = CCIE;
-	setupTimerA1();
-}
-
 void startWatchDogTimer() {
 	SFRIE1 |= WDTIE;
-	setupWatchDogTimer();
-	// WDTCTL &= ~WDTHOLD;
+	WDTCTL = WDTPW | WDTTMSEL | WDTCNTCL | WDTSSEL_0 | WDTIS_5;
 }
 
 void stopTimerA1() {
@@ -107,13 +98,13 @@ __interrupt void buttonS2(void)
 		if(CURRENT_TIMER == 0) {
 			stopWatchDogTimer();
 
-			P8OUT |= BIT2;
+			P8OUT &= ~BIT2;
 
 			CURRENT_TIMER = 1;
 		} else {
 			stopTimerA1();
-		
-			P8OUT &= ~BIT2;
+			
+			P8OUT |= BIT2;
 
 			CURRENT_TIMER = 0;
 		}
