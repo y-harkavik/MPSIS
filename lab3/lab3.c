@@ -17,7 +17,7 @@ void startWatchDogTimer() {
 
 void stopTimerA1() {
 	TA1CCTL0 &= ~CCIE;
-	TA1CTL |= MC_0;
+	TA1CTL = MC_0;
 }
 
 void stopWatchDogTimer() {
