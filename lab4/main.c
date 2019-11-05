@@ -74,25 +74,30 @@ uint8_t Dogs102x6_initMacro[] = {
     SET_COLUMN_ADDRESS_LSB
 };
 
+uint8_t MODE_COMMANDS[2][1] = { {SET_SEG_DIRECTION}, {SET_SEG_DIRECTION | 1} };
+
 int CURRENT_ORIENTATION = 0; // 0 - default, 1 - mirror horizontal
 int COLUMN_START_ADDRESS = 31; // 0 - default(31), 1 - mirror horizontal(0)
 int CURRENT_NUMBER = -5417;
 int SUM_NUMBER = +981;
+uint8_t symbols[12][11] = {
+		{0x20, 0x20, 0x20, 0x20, 0x20, 0xF8, 0x20, 0x20, 0x20, 0x20, 0x20}, // plus
+		{0x00, 0x00, 0x00, 0x00, 0xF8, 0xF8, 0xF8, 0x00, 0x00, 0x00, 0x00}, // minus
+		{0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8}, // num0
+		{0xF8, 0xF8, 0x30, 0x30, 0x30, 0x30, 0xF0, 0xF0, 0x70, 0x70, 0x30}, // num1
+		{0xF8, 0xF8, 0xC0, 0xC0, 0xC0, 0xF8, 0xF8, 0x18, 0x18, 0xF8, 0xF8}, // num2
+		{0xF8, 0xF8, 0x18, 0x18, 0x18, 0xF8, 0xF8, 0x18, 0x18, 0xF8, 0xF8}, // num3
+		{0x18, 0x18, 0x18, 0x18, 0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8}, // num4
+		{0xF8, 0xF8, 0x18, 0x18, 0x18, 0xF8, 0xF8, 0xC0, 0xC0, 0xF8, 0xF8}, // num5
+		{0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8, 0xC0, 0xC0, 0xF8, 0xF8}, // num6
+		{0xC0, 0xC0, 0xE0, 0x70, 0x38, 0x18, 0x18, 0x18, 0x18, 0xF8, 0xF8}, // num7
+		{0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8}, // num8
+		{0xF8, 0xF8, 0x18, 0x18, 0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8} // num9
+};
 
-uint8_t plus[] = {0x20, 0x20, 0x20, 0x20, 0x20, 0xF8, 0x20, 0x20, 0x20, 0x20, 0x20};
-uint8_t minus[] = {0x00, 0x00, 0x00, 0x00, 0xF8, 0xF8, 0xF8, 0x00, 0x00, 0x00, 0x00};
-uint8_t num0[] = {0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8};
-uint8_t num1[] = {0xF8, 0xF8, 0x30, 0x30, 0x30, 0x30, 0xF0, 0xF0, 0x70, 0x70, 0x30};
-uint8_t num2[] = {0xF8, 0xF8, 0xC0, 0xC0, 0xC0, 0xF8, 0xF8, 0x18, 0x18, 0xF8, 0xF8};
-uint8_t num3[] = {0xF8, 0xF8, 0x18, 0x18, 0x18, 0xF8, 0xF8, 0x18, 0x18, 0xF8, 0xF8};
-uint8_t num4[] = {0x18, 0x18, 0x18, 0x18, 0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8};
-uint8_t num5[] = {0xF8, 0xF8, 0x18, 0x18, 0x18, 0xF8, 0xF8, 0xC0, 0xC0, 0xF8, 0xF8};
-uint8_t num6[] = {0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8, 0xC0, 0xC0, 0xF8, 0xF8};
-uint8_t num7[] = {0xC0, 0xC0, 0xE0, 0x70, 0x38, 0x18, 0x18, 0x18, 0x18, 0xF8, 0xF8};
-uint8_t num8[] = {0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8};
-uint8_t num9[] = {0xF8, 0xF8, 0x18, 0x18, 0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8};
-
-int lenHelper(int x);
+int lenHelper(int number);
+int abs(int number);
+int pow(int base, int exponent);
 void printNumber(void);
 
 void Dogs102x6_clearScreen(void);
@@ -105,60 +110,47 @@ void Dogs102x6_init(void);
 #pragma vector = PORT1_VECTOR
 __interrupt void buttonS1(void)
 {
-	P1IE &= ~BIT7;
-
 	volatile int i = 0;
 
 	for(i=0; i<2000; i++);
 
 	if((P1IN & BIT7) == 0) {
 		CURRENT_NUMBER += SUM_NUMBER;
-		
+
 		Dogs102x6_clearScreen();
-		
+
 		printNumber();
 	}
 
 	P1IFG = 0;
-	P1IE |= BIT7;
 }
 
 #pragma vector = PORT2_VECTOR
 __interrupt void buttonS2(void)
 {
-	P2IE &= ~BIT2;
-
 	volatile int i = 0;
+
 	for(i=0; i<1000; i++);
-	
-	uint8_t temp1[] = { SET_SEG_DIRECTION | 1};
-	uint8_t temp2[] = { SET_SEG_DIRECTION };
-	
+
 	if((P2IN & BIT2) == 0){
 		if(CURRENT_ORIENTATION == 0) {
-			Dogs102x6_writeCommand(temp1, 1);
 			COLUMN_START_ADDRESS = 0;
-
 			CURRENT_ORIENTATION = 1;
 		} else {
-			Dogs102x6_writeCommand(temp2, 1);
 			COLUMN_START_ADDRESS = 31;
-
 			CURRENT_ORIENTATION = 0;
 		}
 
+		Dogs102x6_writeCommand(MODE_COMMANDS[CURRENT_ORIENTATION], 1);
 		Dogs102x6_clearScreen();
 		printNumber();
-		
+
 		for(i=0; i<2000; i++);
 	}
+
 	P2IFG = 0;
-	P2IE |= BIT2;
 }
 
-/*
- * main.c
- */
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 	
@@ -180,70 +172,59 @@ int main(void) {
     Dogs102x6_backlightInit();
     Dogs102x6_clearScreen();
     printNumber();
-	
+
+    __bis_SR_register(GIE);
+
 	return 0;
 }
 
 void printNumber(void) {
-	int nDigits = lenHelper(CURRENT_NUMBER > 0 ? CURRENT_NUMBER : CURRENT_NUMBER * (-1));
+	int nDigits = lenHelper(CURRENT_NUMBER);
 	int number = CURRENT_NUMBER;
 
     Dogs102x6_setAddress(0, COLUMN_START_ADDRESS);
-    Dogs102x6_writeData(number > 0 ? plus : minus, 11);
-	volatile int i = 0;
-    int divider = 1;
-    for(i = 0; i < nDigits - 1; i++) {
-    	divider *= 10;
-    }
-    number = number > 0 ? number : number * (-1);
+    Dogs102x6_writeData(number > 0 ? symbols[0] : symbols[1], 11);
+
+	int i = 0;
+    int divider = pow(10, nDigits - 1);
+
+    number = abs(number);
 
     for(i = 1; i <= nDigits; i++) {
-        Dogs102x6_setAddress(i, COLUMN_START_ADDRESS);
     	int digit = number / divider;
-    	switch(digit) {
-    	case 0:
-    	    Dogs102x6_writeData(num0, 11);
-    		break;
-    	case 1:
-    	    Dogs102x6_writeData(num1, 11);
-			break;
-    	case 2:
-    	    Dogs102x6_writeData(num2, 11);
-			break;
-    	case 3:
-    		Dogs102x6_writeData(num3, 11);
-			break;
-    	case 4:
-    		Dogs102x6_writeData(num4, 11);
-			break;
-    	case 5:
-    		Dogs102x6_writeData(num5, 11);
-			break;
-    	case 6:
-    		Dogs102x6_writeData(num6, 11);
-			break;
-    	case 7:
-    		Dogs102x6_writeData(num7, 11);
-			break;
-    	case 8:
-    		Dogs102x6_writeData(num8, 11);
-			break;
-    	case 9:
-    		Dogs102x6_writeData(num9, 11);
-			break;
-    	}
+
+        Dogs102x6_setAddress(i, COLUMN_START_ADDRESS);
+    	Dogs102x6_writeData(symbols[digit + 2], 11);
+
     	number = number % divider;
     	divider /= 10;
     }
 }
 
-int lenHelper(int x) {
-	if(x >= 10000) return 5;
-	if(x >= 1000) return 4;
-	if(x >= 100) return 3;
-	if(x >= 10) return 2;
+int lenHelper(int number) {
+	number = abs(number);
+
+	if(number >= 10000) return 5;
+	if(number >= 1000) return 4;
+	if(number >= 100) return 3;
+	if(number >= 10) return 2;
 
 	return 1;
+}
+
+int abs(int number) {
+	return number > 0 ? number : number * (-1);
+}
+
+int pow(int base, int exponent) {
+	int i = 0;
+	int result = base;
+
+    for(i = 0; i < exponent - 1; i++) {
+    	result *= base;
+    }
+
+    return result;
 }
 
 void Dogs102x6_clearScreen(void)
@@ -307,8 +288,6 @@ void Dogs102x6_setAddress(uint8_t pa, uint8_t ca)
 
 void Dogs102x6_writeData(uint8_t *sData, uint8_t i)
 {
-	__bic_SR_register(GIE);
-
     // CS Low
     P7OUT &= ~CS;
     //CD High
@@ -342,15 +321,10 @@ void Dogs102x6_writeData(uint8_t *sData, uint8_t i)
 
     // CS High
     P7OUT |= CS;
-
-    // Restore original GIE state
-    __bis_SR_register(GIE);
 }
 
 void Dogs102x6_writeCommand(uint8_t *sCmd, uint8_t i)
 {
-	__bic_SR_register(GIE);
-
     // CS Low
     P7OUT &= ~CS;
 
@@ -379,9 +353,6 @@ void Dogs102x6_writeCommand(uint8_t *sCmd, uint8_t i)
 
     // CS High
     P7OUT |= CS;
-
-    // Restore original GIE state
-    __bis_SR_register(GIE);
 }
 
 void Dogs102x6_backlightInit(void)
