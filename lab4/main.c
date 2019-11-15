@@ -234,7 +234,7 @@ void Dogs102x6_setAddress(uint8_t pa, uint8_t ca)
 	uint8_t L = 0x00;
 	uint8_t ColumnAddress[] = { SET_COLUMN_ADDRESS_MSB, SET_COLUMN_ADDRESS_LSB };
 
-	= L = (ca & 0x0F);
+	L = (ca & 0x0F);
 	H = (ca & 0xF0);
 	H = (H >> 4);
 
