@@ -2,18 +2,18 @@
 
 typedef unsigned char uint8_t;
 
-#define SET_COLUMN_ADDRESS_LSB        0x00 
+#define SET_COLUMN_ADDRESS_LSB        0x00
 #define SET_COLUMN_ADDRESS_MSB        0x10
-#define SET_PAGE_ADDRESS              0xB0  
+#define SET_PAGE_ADDRESS              0xB0
 
-#define SET_SEG_DIRECTION             0xA0  
-#define SET_COM_DIRECTION             0xC0  
+#define SET_SEG_DIRECTION             0xA0
+#define SET_COM_DIRECTION             0xC0
 
 #define SET_POWER_CONTROL             0x2F // Управление питанием. PC[0] – усилитель, PC[1] — регулятор, PC[2] — повторитель. 0 — отключено, 1 — включено
 #define SET_SCROLL_LINE               0x40 // Установка начальной линии скроллинга SL=0..63
 #define SET_VLCD_RESISTOR_RATIO       0x27 // Установка уровня внутреннего резисторного делителя PC = [0..7].Используется для управления контрастом.
 #define SET_ELECTRONIC_VOLUME_MSB     0x81 // Регулировка контраста. Двухбайтная команда. PM[5..0] PM = 0..63.
-#define SET_ELECTRONIC_VOLUME_LSB     0x0F 
+#define SET_ELECTRONIC_VOLUME_LSB     0x0F
 #define SET_ALL_PIXEL_ON              0xA4 // Включение всех пикселей. 0 – отображение содержимого памяти, 1 – все пиксели включены (содержимое памяти сохраняется).
 #define SET_INVERSE_DISPLAY           0xA6 // Включение инверсного режима. 0 — нормальное отображение содержимого памяти, 1 — инверсное.
 #define SET_DISPLAY_ENABLE            0xAF // Отключение экрана. 0 — экран отключен, 1 — включен.
@@ -52,7 +52,7 @@ int SUM_NUMBER = +981;
 
 uint8_t symbols[12][11] = {
 		{0x20, 0x20, 0x20, 0x20, 0x20, 0xF8, 0x20, 0x20, 0x20, 0x20, 0x20}, // plus
-		{0x00, 0x00, 0x00, 0x00, 0xF8, 0xF8, 0xF8, 0x00, 0x00, 0x00, 0x00}, // minus
+		{0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0x00, 0x00, 0x00}, // minus
 		{0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8}, // num0
 		{0xF8, 0xF8, 0x30, 0x30, 0x30, 0x30, 0xF0, 0xF0, 0x70, 0x70, 0x30}, // num1
 		{0xF8, 0xF8, 0xC0, 0xC0, 0xC0, 0xF8, 0xF8, 0x18, 0x18, 0xF8, 0xF8}, // num2
@@ -62,7 +62,7 @@ uint8_t symbols[12][11] = {
 		{0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8, 0xC0, 0xC0, 0xF8, 0xF8}, // num6
 		{0xC0, 0xC0, 0xE0, 0x70, 0x38, 0x18, 0x18, 0x18, 0x18, 0xF8, 0xF8}, // num7
 		{0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8}, // num8
-		{0xF8, 0xF8, 0x18, 0x18, 0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8} // num9
+		{0xF8, 0xF8, 0x18, 0x18, 0xF8, 0xF8, 0xD8, 0xD8, 0xD8, 0xF8, 0xF8}  // num9
 };
 
 int lenHelper(int number);
@@ -90,6 +90,8 @@ __interrupt void buttonS1(void)
 		Dogs102x6_clearScreen();
 
 		printNumber();
+
+		for (i = 0; i < 2000; i++);
 	}
 
 	P1IFG = 0;
@@ -100,7 +102,7 @@ __interrupt void buttonS2(void)
 {
 	volatile int i = 0;
 
-	for (i = 0; i < 1000; i++);
+	for (i = 0; i < 2000; i++);
 
 	if ((P2IN & BIT2) == 0) {
 		if (CURRENT_ORIENTATION == 0) {
@@ -123,7 +125,7 @@ __interrupt void buttonS2(void)
 }
 
 int main(void) {
-	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
+	WDTCTL = WDTPW | WDTHOLD;
 
 	P1DIR &= ~BIT7;
 	P1OUT |= BIT7;
@@ -261,7 +263,6 @@ void Dogs102x6_writeData(uint8_t* sData, uint8_t i)
 	}
 
 	while (UCB1STAT & UCBUSY);
-
 	// Dummy read to empty RX buffer and clear any overrun conditions
 	UCB1RXBUF;
 
@@ -284,7 +285,6 @@ void Dogs102x6_writeCommand(uint8_t* sCmd, uint8_t i)
 	}
 
 	while (UCB1STAT & UCBUSY);
-
 	// Dummy read to empty RX buffer and clear any overrun conditions
 	UCB1RXBUF;
 
@@ -305,7 +305,6 @@ void Dogs102x6_init(void)
 	P5OUT |= BIT7;
 
 	P7DIR |= CS;
-	P7OUT &= ~CS;
 
 	P5DIR |= CD;
 	P5OUT &= ~CD;
@@ -316,11 +315,10 @@ void Dogs102x6_init(void)
 	P4SEL |= BIT3; // синхросигнал SCLK
 	P4DIR |= BIT3;
 
-	UCB1CTL1 |= UCSWRST;
+	UCB1CTL1 = UCSSEL_2 + UCSWRST;
 	//3-pin, 8-bit SPI master
 	UCB1CTL0 = UCCKPH + UCMSB + UCMST + UCMODE_0 + UCSYNC;
 
-	UCB1CTL1 = UCSSEL_2 + UCSWRST;
 	UCB1BR0 = 0x02;
 	UCB1BR1 = 0;
 
@@ -328,6 +326,4 @@ void Dogs102x6_init(void)
 	UCB1IFG &= ~UCRXIFG;
 
 	Dogs102x6_writeCommand(Dogs102x6_initMacro, 13);
-
-	P7OUT |= CS;
 }
