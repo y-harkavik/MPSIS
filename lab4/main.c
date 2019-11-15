@@ -108,7 +108,7 @@ __interrupt void buttonS2(void)
 			CURRENT_ORIENTATION = 1;
 		}
 		else {
-			COLUMN_START_ADDRESS = 31;
+			COLUMN_START_ADDRESS = 30;
 			CURRENT_ORIENTATION = 0;
 		}
 
