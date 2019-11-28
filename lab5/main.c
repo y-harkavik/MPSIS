@@ -75,7 +75,6 @@ uint8_t CMA3000_writeCommand(uint8_t byte_one, uint8_t byte_two);
 void CMA3000_init(void);
 int calculateAngleFromProjection(double projection);
 long int parseProjectionByte(uint8_t projection_byte);
-void delay(long int value);
 
 void Dogs102x6_clearScreen(void);
 void Dogs102x6_setAddress(uint8_t pa, uint8_t ca);
@@ -85,10 +84,7 @@ void Dogs102x6_backlightInit(void);
 void Dogs102x6_init(void);
 
 #pragma vector = PORT2_VECTOR
-__interrupt void accelerometerInterrupt(void)
-{
-	delay(2000);
-
+__interrupt void accelerometerInterrupt(void) {
 	volatile uint8_t xProjectionByte = CMA3000_writeCommand(READ_X_AXIS_DATA, NONE);
 	volatile uint8_t zProjectionByte = CMA3000_writeCommand(READ_Z_AXIS_DATA, NONE);
 
@@ -298,9 +294,7 @@ void Dogs102x6_init(void)
 	Dogs102x6_writeCommand(Dogs102x6_initMacro, 13);
 }
 
-void CMA3000_init(void)
-{
-    // INT signal
+void CMA3000_init(void) {
     P2DIR  &= ~BIT5;	// mode: input
     P2OUT  |=  BIT5;
     P2REN  |=  BIT5;	// enable pull up resistor
@@ -318,26 +312,25 @@ void CMA3000_init(void)
 
     // Setup SPI communication
     P3DIR  |= (BIT3 | BIT6);	// Set MOSI and PWM pins to output mode
-    P3DIR  &= ~BIT4;			// Set MISO to input mode
+    P3DIR  &= ~BIT4;		// Set MISO to input mode
     P3SEL  |= (BIT3 | BIT4);	// Set mode : P3.3 - UCA0SIMO , P3.4 - UCA0SOMI
-    P3OUT  |= BIT6;				// Power cma3000
+    P3OUT  |= BIT6;		// Power cma3000
+    UCA0CTL1 = UCSSEL_2 | UCSWRST;
 
-	UCA0CTL1 = UCSSEL_2 | UCSWRST;
-
-	UCA0BR0 = 0x30;
-	UCA0BR1 = 0x0;
+    UCA0BR0 = 0x30;
+    UCA0BR1 = 0x0;
 
     UCA0CTL0 = UCCKPH & ~UCCKPL | UCMSB | UCMST | UCSYNC | UCMODE_0;
 
-	UCA0CTL1 &= ~UCSWRST;
+    UCA0CTL1 &= ~UCSWRST;
 
-	// dummy read from REVID
-	CMA3000_writeCommand(0x04, NONE);
-	__delay_cycles(1250);
+    // dummy read from REVID
+    CMA3000_writeCommand(0x04, NONE);
+    __delay_cycles(1250);
 
-	// write to CTRL register
-	CMA3000_writeCommand(0x0A, BIT4 | BIT2);
-	__delay_cycles(25000);
+    // write to CTRL register
+    CMA3000_writeCommand(0x0A, BIT4 | BIT2);
+    __delay_cycles(25000);
 }
 
 uint8_t CMA3000_writeCommand(uint8_t firstByte, uint8_t secondByte) {
@@ -398,11 +391,4 @@ int calculateAngleFromProjection(double projection) {
 	angle *= 57.3;
 
 	return (int) angle;
-}
-
-
-void delay(long int value) {
-	volatile long int i = 0;
-
-	for (; i < value; i++);
 }
